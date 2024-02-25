@@ -7,10 +7,10 @@ from sklearn.model_selection import train_test_split
 import tensorflow as tf
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, BatchNormalization, Activation, Dense, Dropout
-from keras.layers.core import Lambda, RepeatVector, Reshape
-from keras.layers.convolutional import Conv2D, Conv2DTranspose
-from keras.layers.pooling import MaxPooling2D, GlobalMaxPool2D
-from keras.layers.merge import concatenate, add
+from keras.layers import Lambda, RepeatVector, Reshape
+from keras.layers import Conv2D, Conv2DTranspose
+from keras.layers import MaxPooling2D, GlobalMaxPool2D
+from keras.layers import concatenate, add
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
 import os 
@@ -28,6 +28,9 @@ from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from keras import backend as K
 from sklearn.metrics import roc_curve, auc, precision_recall_curve 
 from sklearn.model_selection import train_test_split
+from dataloader import get_data, path_test
+from loss import dice_loss
+
 X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.3, random_state=2019)
 
 img_row = 256

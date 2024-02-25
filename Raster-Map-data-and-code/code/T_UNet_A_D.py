@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 plt.style.use("ggplot")
-%matplotlib inline
 
 from tqdm import tqdm_notebook, tnrange
 from itertools import chain
@@ -17,10 +16,10 @@ import tensorflow as tf
 
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, BatchNormalization, Activation, Dense, Dropout
-from keras.layers.core import Lambda, RepeatVector, Reshape
-from keras.layers.convolutional import Conv2D, Conv2DTranspose
-from keras.layers.pooling import MaxPooling2D, GlobalMaxPool2D
-from keras.layers.merge import concatenate, add
+from keras.layers import Lambda, RepeatVector, Reshape
+from keras.layers import Conv2D, Conv2DTranspose
+from keras.layers import MaxPooling2D, GlobalMaxPool2D
+from keras.layers import concatenate, add
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 # from tensorflow.keras.optimizers import Adam,SGD
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img

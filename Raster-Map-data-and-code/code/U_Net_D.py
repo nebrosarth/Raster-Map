@@ -1,40 +1,29 @@
-import os
-import random
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
-plt.style.use("ggplot")
-%matplotlib inline
+from keras.src.losses import binary_crossentropy
 
-from tqdm import tqdm_notebook, tnrange
-from itertools import chain
-from skimage.io import imread, imshow, concatenate_images
+plt.style.use("ggplot")
+
+from tqdm import tqdm_notebook
 from skimage.transform import resize
-from skimage.morphology import label
-from sklearn.model_selection import train_test_split
-import tensorflow as tf
-from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, BatchNormalization, Activation, Dense, Dropout
-from keras.layers.core import Lambda, RepeatVector, Reshape
-from keras.layers.convolutional import Conv2D, Conv2DTranspose
-from keras.layers.pooling import MaxPooling2D, GlobalMaxPool2D
-from keras.layers.merge import concatenate, add
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
-from tensorflow.keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
-import os 
-import cv2 
+from tensorflow.keras import Model
+from tensorflow.keras.layers import BatchNormalization
+from keras.layers import Lambda
+from keras.layers import Conv2D, Conv2DTranspose
+from keras.layers import MaxPooling2D
+from keras.layers import concatenate, add
+from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.utils import img_to_array, load_img
+import os
 import numpy as np
 import tensorflow as tf
-import matplotlib.pyplot as plt 
 from keras.models import Model
 from tensorflow.keras.layers import Input, concatenate, Conv2D, MaxPooling2D, Conv2DTranspose
 from tensorflow.keras.layers import Activation, add, multiply, Lambda
-from tensorflow.keras.layers import AveragePooling2D, average, UpSampling2D, Dropout
-from tensorflow.keras.optimizers import Adam,SGD,RMSprop
-from keras.initializers import glorot_normal, random_normal, random_uniform
-from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
-from keras import backend as K
-from sklearn.metrics import roc_curve, auc, precision_recall_curve 
+from tensorflow.keras.layers import UpSampling2D, Dropout
+from tensorflow.keras.optimizers import Adam,SGD
+from keras.callbacks import ModelCheckpoint
+from tensorflow.keras import backend as K
+from keras.layers import Flatten
 from sklearn.model_selection import train_test_split
 
 
@@ -105,8 +94,8 @@ smooth = 1
 
 def dsc(y_true, y_pred):
     smooth = 1.
-    y_true_f = K.flatten(y_true)
-    y_pred_f = K.flatten(y_pred)
+    y_true_f = Flatten()(y_true)
+    y_pred_f = Flatten()(y_pred)
     intersection = K.sum(y_true_f * y_pred_f)
     score = (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
     return score
@@ -149,8 +138,8 @@ def tn(y_true, y_pred):
     return tn 
 
 def tversky(y_true, y_pred):
-    y_true_pos = K.flatten(y_true)
-    y_pred_pos = K.flatten(y_pred)
+    y_true_pos = Flatten()(y_true)
+    y_pred_pos = Flatten()(y_pred)
     true_pos = K.sum(y_true_pos * y_pred_pos)
     false_neg = K.sum(y_true_pos * (1-y_pred_pos))
     false_pos = K.sum((1-y_true_pos)*y_pred_pos)
@@ -165,7 +154,7 @@ def focal_tversky(y_true,y_pred):
     gamma = 0.75
     return K.pow((1-pt_1), gamma)
 
-def unet(opt,input_size, lossfxn):   
+def unet(opt,input_size, lossfxn):
   
     inputs = Input(shape=input_size)
     conv1 = UnetConv2D(inputs, 32, is_batchnorm=True, name='conv1')
@@ -205,14 +194,22 @@ def unet(opt,input_size, lossfxn):
     conv10 = Conv2D(1, (1, 1), activation='sigmoid', name='final')(conv9)
 
     model = Model(inputs=[inputs], outputs=[conv10])
+    def prec(y_true, y_pred):
+        _, recall = confusion(y_true, y_pred)
+        return recall
+
+    def recall(y_true, y_pred):
+        prec, _ = confusion(y_true, y_pred)
+        return prec
+
     model.compile(optimizer=opt, loss=lossfxn, metrics=[dsc,tp,tn,prec,recall])
     return model
 
 
 im_width = 256
 im_height = 256
-path_train ='tianditu/'
-path_test = 'tianditu/test/'
+path_train ='E:\\Raster-Map\\Raster-Map-data-and-code\\training_dataset\\tianditu\\'
+path_test = 'E:\\Raster-Map\\Raster-Map-data-and-code\\training_dataset\\tianditu/test/'
 
 #加载数据
 # Get and resize train images and masks
@@ -224,7 +221,7 @@ def get_data(path, train=True):
     print('Getting and resizing images ... ')
     for n, id_ in tqdm_notebook(enumerate(ids), total=len(ids),disable=True):
         # Load images
-        img = load_img(path + 'images/' + id_, grayscale=False)
+        img = load_img(path + 'images/' + id_)
         x_img = img_to_array(img)
         x_img = resize(x_img, (256, 256, 1), mode='constant', preserve_range=True)
 
@@ -235,7 +232,7 @@ def get_data(path, train=True):
             mask_id_ = id_
         # Load masks
         if train:
-            mask = img_to_array(load_img(path + 'masks/' + mask_id_, grayscale=True))
+            mask = img_to_array(load_img(path + 'masks/' + mask_id_))
             mask = resize(mask, (256, 256, 1), mode='constant', preserve_range=True)
 
         # Save images
@@ -261,8 +258,8 @@ epochnum = 50
 batchnum = 8
 smooth = 1.
     
-sgd = SGD(lr=0.01, momentum=0.90, decay=1e-6)
-adam = Adam(lr=1e-3) 
+sgd = SGD(learning_rate=0.01, momentum=0.90, decay=1e-6)
+adam = Adam(learning_rate=1e-3)
 
 input_size = (img_row, img_col, img_chan)
 K.set_image_data_format('channels_last')  # TF dimension ordering in this code
@@ -274,7 +271,7 @@ model = unet(adam, input_size, dice_loss)
 callbacks = [
 #     EarlyStopping(patience=10, verbose=1),
     ReduceLROnPlateau(factor=0.1, patience=3, min_lr=0.000001, verbose=1),
-    ModelCheckpoint('model-T_unet-maproad.h5', verbose=1, save_best_only=True, save_weights_only=True)
+    ModelCheckpoint("E:\\Raster-Map\\Raster-Map-data-and-code\\model\\model-T_unet-maproad.weights.h5", verbose=1, save_best_only=True, save_weights_only=True)
 ]
 #u-net模型训练
 results = model.fit(X_train, y_train, batch_size=1, epochs=100, callbacks=callbacks,
