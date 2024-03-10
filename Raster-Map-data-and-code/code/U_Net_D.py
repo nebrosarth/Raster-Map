@@ -277,7 +277,7 @@ with tf.device('/GPU:0'):
 callbacks = [
 #     EarlyStopping(patience=10, verbose=1),
     ReduceLROnPlateau(factor=0.1, patience=3, min_lr=0.000001, verbose=1),
-    ModelCheckpoint("E:\\Raster-Map\\Raster-Map-data-and-code\\model\\model-T_unet-maproad.weights.h5", verbose=1, save_best_only=True, save_weights_only=True)
+    ModelCheckpoint("/Raster-Map-data-and-code/model/model-T_unet-maproad-fc2d.weights.h5", verbose=1, save_best_only=True, save_weights_only=True)
 ]
 #u-net模型训练
 results = model.fit(X_train, y_train, batch_size=1, epochs=100, callbacks=callbacks, validation_data=(X_valid, y_valid))
