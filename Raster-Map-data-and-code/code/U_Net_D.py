@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
-from keras.src.losses import binary_crossentropy
+from keras.losses import binary_crossentropy
+
+
 
 plt.style.use("ggplot")
 
@@ -26,10 +28,13 @@ from tensorflow.keras import backend as K
 from keras.layers import Flatten
 from sklearn.model_selection import train_test_split
 
+#tf.debugging.set_log_device_placement(True)
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0' 
-gpus = tf.config.experimental.list_physical_devices(device_type='GPU') 
-for gpu in gpus: 
+print("GPUs Available: ", tf.config.list_physical_devices('GPU'))
+
+for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
 
 
@@ -265,7 +270,8 @@ input_size = (img_row, img_col, img_chan)
 K.set_image_data_format('channels_last')  # TF dimension ordering in this code
 kinit = 'he_normal'
 
-model = unet(adam, input_size, dice_loss)
+with tf.device('/GPU:0'):
+    model = unet(adam, input_size, dice_loss)
 
 #训练网络模型U-net
 callbacks = [
@@ -274,8 +280,7 @@ callbacks = [
     ModelCheckpoint("E:\\Raster-Map\\Raster-Map-data-and-code\\model\\model-T_unet-maproad.weights.h5", verbose=1, save_best_only=True, save_weights_only=True)
 ]
 #u-net模型训练
-results = model.fit(X_train, y_train, batch_size=1, epochs=100, callbacks=callbacks,
-                    validation_data=(X_valid, y_valid))
+results = model.fit(X_train, y_train, batch_size=1, epochs=100, callbacks=callbacks, validation_data=(X_valid, y_valid))
 X_test, y_test = get_data(path_test, train=True)
 preds_train = model.predict(X_train, verbose=1)
 preds_val = model.predict(X_valid, verbose=1)
