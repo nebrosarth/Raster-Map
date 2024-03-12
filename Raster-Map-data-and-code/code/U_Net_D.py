@@ -230,8 +230,8 @@ def unet(opt, input_size, lossfxn):
 
 im_width = 256
 im_height = 256
-path_train = 'E:\\Raster-Map\\Raster-Map-data-and-code\\training_dataset\\tianditu\\'
-path_test = 'E:\\Raster-Map\\Raster-Map-data-and-code\\training_dataset\\tianditu/test/'
+path_train = '../training_dataset/tianditu/'
+path_test = '../training_dataset/tianditu/test/'
 
 
 # 加载数据
@@ -272,13 +272,13 @@ def get_data(path, train=True):
 
     # X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.3, random_state=2019)
 
+
 img_row = 256
 img_col = 256
 img_chan = 1
 epochnum = 50
 batchnum = 8
 smooth = 1.
-
 
 sgd = SGD(learning_rate=0.01, momentum=0.90, decay=1e-6)
 adam = Adam(learning_rate=1e-3)
@@ -287,14 +287,13 @@ input_size = (img_row, img_col, img_chan)
 # K.set_image_data_format('channels_last')  # TF dimension ordering in this code
 kinit = 'he_normal'
 
-with tf.device('/GPU:0'):
-    model = unet(adam, input_size, dice_loss)
+model = unet(adam, input_size, dice_loss)
 
 # 训练网络模型U-net
 callbacks = [
     #     EarlyStopping(patience=10, verbose=1),
     ReduceLROnPlateau(factor=0.1, patience=3, min_lr=0.000001, verbose=1),
-    ModelCheckpoint("E:\\Raster-Map-data-and-code/model/model-T_unet-maproad-fc2d.weights.h5", verbose=1,
+    ModelCheckpoint("../model/model-T_unet-maproad-fc2d.weights.h5", verbose=1,
                     save_best_only=True, save_weights_only=True)
 ]
 # u-net模型训练
@@ -305,26 +304,34 @@ X_test, y_test = get_data(path_test, train=True)
 # preds_test = model.predict(X_test, verbose=1)
 # model.evaluate(X_test, y_test, batch_size=8, verbose=1)
 
-print(os.path.dirname(__file__))
-a = os.path.dirname(__file__)
 # Load model from file
-model_path = f"E:/Raster-Map/Raster-Map-data-and-code/model/model-T_unet-maproad-fc2d.weights.h5"
+model_path = "../model/model-T_unet-maproad-fc2d.weights.h5"
 model.load_weights(model_path)
 # Test model on test data
 
 model.evaluate(X_test, y_test, batch_size=8, verbose=1)
 preds_test = model.predict(X_test, verbose=1)
 
-print(preds_test)
+# # Создаем фигуру с 40 подграфиками в сетке 5x8
+# fig, axes = plt.subplots(5, 8, figsize=(16, 10))
+#
+# # Перебираем все подграфики и рисуем на них соответствующие картинки из массива
+# # Используем squeeze() для удаления лишней размерности
+# for i, ax in enumerate(axes.flat):
+#     ax.imshow(preds_test[i].squeeze(), cmap="gray")
+#     ax.axis("off")
 
-# Создаем фигуру с 40 подграфиками в сетке 5x8
-fig, axes = plt.subplots(5, 8, figsize=(16, 10))
+# Рисуем по отдельности картинку с предсказанием и истинное изображение через цикл
+for i in range(1):
+    fig, ax = plt.subplots(1, 2, figsize=(10, 15))
+    ax[0].imshow(preds_test[i].squeeze(), cmap="gray")
+    ax[0].set_title("Prediction")
 
-# Перебираем все подграфики и рисуем на них соответствующие картинки из массива
-# Используем squeeze() для удаления лишней размерности
-for i, ax in enumerate(axes.flat):
-    ax.imshow(preds_test[i].squeeze(), cmap="gray")
-    ax.axis("off")
+    ax[1].imshow(y_test[i].squeeze(), cmap="gray")
+    ax[1].set_title("True")
+
+    for a in ax:
+        a.axis("off")
 
 # Показываем фигуру
 plt.show()
