@@ -25,7 +25,6 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLRO
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
 
 import os 
-import cv2 
 import numpy as np
 # %tensorflow_version 1.x
 import tensorflow as tf
@@ -36,9 +35,9 @@ from tensorflow.keras.layers import Input, concatenate, Conv2D, MaxPooling2D, Co
 from tensorflow.keras.layers import Activation, add, multiply, Lambda
 from tensorflow.keras.layers import AveragePooling2D, average, UpSampling2D, Dropout
 from tensorflow.keras.optimizers import Adam,SGD,RMSprop
-from keras.initializers import glorot_normal, random_normal, random_uniform
 from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from keras import backend as K
+from loss import dsc, tp, tn, prec, recall
 # from keras.layers.normalization import BatchNormalization 
 
 from sklearn.metrics import roc_curve, auc, precision_recall_curve # roc curve tools
@@ -46,7 +45,6 @@ from sklearn.model_selection import train_test_split
 
 import os
 from tensorflow.keras.models import Sequential
-import cv2
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -151,8 +149,8 @@ def ASPP(input, out_channel, name):
     x = Dropout(0.5)(x)
 
     return x
-
-def attn_unet(opt,input_size, lossfxn):   
+kinit = 'he_normal'
+def t_unet_a_d_as(opt, input_size, lossfxn):
     inputs = Input(shape=input_size)
     conv1 = UnetConv2D(inputs, 32, is_batchnorm=True, name='conv1')
     conv1 = Dropout(0.2, name='drop_conv1')(conv1)

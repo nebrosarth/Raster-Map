@@ -25,15 +25,16 @@ from keras.callbacks import ModelCheckpoint
 from tensorflow.keras import backend as K
 from keras.layers import Flatten
 from sklearn.model_selection import train_test_split
+from loss import dsc, tp, tn, prec, recall
 
 # tf.debugging.set_log_device_placement(True)
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
-
-print("GPUs Available: ", tf.config.list_physical_devices('GPU'))
-
-for gpu in gpus:
-    tf.config.experimental.set_memory_growth(gpu, True)
+# os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+# gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
+#
+# print("GPUs Available: ", tf.config.list_physical_devices('GPU'))
+#
+# for gpu in gpus:
+#     tf.config.experimental.set_memory_growth(gpu, True)
 
 
 def AttnGatingBlock(x, g, inter_shape, name):
@@ -174,7 +175,8 @@ def focal_tversky(y_true, y_pred):
     return K.pow((1 - pt_1), gamma)
 
 
-def unet(opt, input_size, lossfxn):
+kinit = 'he_normal'
+def u_net_d(opt, input_size, lossfxn):
     inputs = Input(shape=input_size)
     conv1 = UnetConv2D(inputs, 32, is_batchnorm=True, name='conv1')
     conv1 = Dropout(0.2, name='drop_conv1')(conv1)
@@ -216,13 +218,7 @@ def unet(opt, input_size, lossfxn):
 
     model = Model(inputs=[inputs], outputs=[conv10])
 
-    def prec(y_true, y_pred):
-        _, recall = confusion(y_true, y_pred)
-        return recall
 
-    def recall(y_true, y_pred):
-        prec, _ = confusion(y_true, y_pred)
-        return prec
 
     model.compile(optimizer=opt, loss=lossfxn, metrics=[dsc, tp, tn, prec, recall])
     return model
@@ -273,65 +269,65 @@ def get_data(path, train=True):
     # X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.3, random_state=2019)
 
 
-img_row = 256
-img_col = 256
-img_chan = 1
-epochnum = 50
-batchnum = 8
-smooth = 1.
-
-sgd = SGD(learning_rate=0.01, momentum=0.90, decay=1e-6)
-adam = Adam(learning_rate=1e-3)
+# img_row = 256
+# img_col = 256
+# img_chan = 1
+# epochnum = 50
+# batchnum = 8
+# smooth = 1.
 #
-input_size = (img_row, img_col, img_chan)
-# K.set_image_data_format('channels_last')  # TF dimension ordering in this code
-kinit = 'he_normal'
-
-model = unet(adam, input_size, dice_loss)
-
-# 训练网络模型U-net
-callbacks = [
-    #     EarlyStopping(patience=10, verbose=1),
-    ReduceLROnPlateau(factor=0.1, patience=3, min_lr=0.000001, verbose=1),
-    ModelCheckpoint("../model/model-T_unet-maproad-fc2d.weights.h5", verbose=1,
-                    save_best_only=True, save_weights_only=True)
-]
-# u-net模型训练
-# results = model.fit(X_train, y_train, batch_size=1, epochs=100, callbacks=callbacks, validation_data=(X_valid, y_valid))
-X_test, y_test = get_data(path_test, train=True)
-# preds_train = model.predict(X_train, verbose=1)
-# preds_val = model.predict(X_valid, verbose=1)
-# preds_test = model.predict(X_test, verbose=1)
+# sgd = SGD(learning_rate=0.01, momentum=0.90, decay=1e-6)
+# adam = Adam(learning_rate=1e-3)
+# #
+# input_size = (img_row, img_col, img_chan)
+# # K.set_image_data_format('channels_last')  # TF dimension ordering in this code
+# kinit = 'he_normal'
+#
+# model = u_net_d(adam, input_size, dice_loss)
+#
+# # 训练网络模型U-net
+# callbacks = [
+#     #     EarlyStopping(patience=10, verbose=1),
+#     ReduceLROnPlateau(factor=0.1, patience=3, min_lr=0.000001, verbose=1),
+#     ModelCheckpoint("../model/model-T_unet-maproad-fc2d.weights.h5", verbose=1,
+#                     save_best_only=True, save_weights_only=True)
+# ]
+# # u-net模型训练
+# # results = model.fit(X_train, y_train, batch_size=1, epochs=100, callbacks=callbacks, validation_data=(X_valid, y_valid))
+# X_test, y_test = get_data(path_test, train=True)
+# # preds_train = model.predict(X_train, verbose=1)
+# # preds_val = model.predict(X_valid, verbose=1)
+# # preds_test = model.predict(X_test, verbose=1)
+# # model.evaluate(X_test, y_test, batch_size=8, verbose=1)
+#
+# # Load model from file
+# model_path = "../model/model-T_unet-maproad-fc2d.weights.h5"
+# model.load_weights(model_path)
+# # Test model on test data
+#
 # model.evaluate(X_test, y_test, batch_size=8, verbose=1)
-
-# Load model from file
-model_path = "../model/model-T_unet-maproad-fc2d.weights.h5"
-model.load_weights(model_path)
-# Test model on test data
-
-model.evaluate(X_test, y_test, batch_size=8, verbose=1)
-preds_test = model.predict(X_test, verbose=1)
-
-# # Создаем фигуру с 40 подграфиками в сетке 5x8
-# fig, axes = plt.subplots(5, 8, figsize=(16, 10))
+# preds_test = model.predict(X_test, verbose=1)
 #
-# # Перебираем все подграфики и рисуем на них соответствующие картинки из массива
-# # Используем squeeze() для удаления лишней размерности
-# for i, ax in enumerate(axes.flat):
-#     ax.imshow(preds_test[i].squeeze(), cmap="gray")
-#     ax.axis("off")
-
-# Рисуем по отдельности картинку с предсказанием и истинное изображение через цикл
-for i in range(1):
-    fig, ax = plt.subplots(1, 2, figsize=(10, 15))
-    ax[0].imshow(preds_test[i].squeeze(), cmap="gray")
-    ax[0].set_title("Prediction")
-
-    ax[1].imshow(y_test[i].squeeze(), cmap="gray")
-    ax[1].set_title("True")
-
-    for a in ax:
-        a.axis("off")
-
-# Показываем фигуру
-plt.show()
+# # # Создаем фигуру с 40 подграфиками в сетке 5x8
+# # fig, axes = plt.subplots(5, 8, figsize=(16, 10))
+# #
+# # # Перебираем все подграфики и рисуем на них соответствующие картинки из массива
+# # # Используем squeeze() для удаления лишней размерности
+# # for i, ax in enumerate(axes.flat):
+# #     ax.imshow(preds_test[i].squeeze(), cmap="gray")
+# #     ax.axis("off")
+#
+# # Рисуем по отдельности картинку с предсказанием и истинное изображение через цикл
+# for i in range(1):
+#     fig, ax = plt.subplots(1, 2, figsize=(10, 15))
+#     ax[0].imshow(preds_test[i].squeeze(), cmap="gray")
+#     ax[0].set_title("Prediction")
+#
+#     ax[1].imshow(y_test[i].squeeze(), cmap="gray")
+#     ax[1].set_title("True")
+#
+#     for a in ax:
+#         a.axis("off")
+#
+# # Показываем фигуру
+# plt.show()
