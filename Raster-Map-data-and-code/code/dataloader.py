@@ -48,7 +48,7 @@ def get_data(path, train=True):
     if train:
         y = np.zeros((len(ids), im_height, im_width, 1), dtype=np.float32)
     print('Getting and resizing images ... ')
-    for n, id_ in tqdm_notebook(enumerate(ids), total=len(ids),disable=True):
+    for n, id_ in tqdm_notebook(enumerate(ids), total=len(ids),disable=False):
         # Load images
         img = load_img(path + 'images/' + id_, grayscale=False)
         x_img = img_to_array(img)
