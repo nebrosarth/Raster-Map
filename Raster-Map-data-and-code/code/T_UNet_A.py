@@ -35,6 +35,7 @@ from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from keras import backend as K
 from sklearn.metrics import roc_curve, auc, precision_recall_curve
 from sklearn.model_selection import train_test_split
+from loss import dsc, tp, tn, prec, recall
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
@@ -222,7 +223,7 @@ def t_unet_a(opt, input_size, lossfxn):
     out = Conv2D(1, (1, 1), activation='sigmoid', kernel_initializer=kinit, name='final')(up4)
 
     model = Model(inputs=[inputs], outputs=[out])
-    model.compile(optimizer=opt, loss=lossfxn, metrics=[dsc, tp, tn])
+    model.compile(optimizer=opt, loss=lossfxn, metrics=[dsc, tp, tn, prec, recall])
     return model
 
 

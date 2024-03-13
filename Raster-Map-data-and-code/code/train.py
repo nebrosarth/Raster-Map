@@ -14,7 +14,6 @@ from keras.layers import concatenate, add
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
 import os 
-import cv2 
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt 

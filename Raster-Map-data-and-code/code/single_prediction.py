@@ -39,7 +39,7 @@ def make_X(patches):
     return X
 
 
-def predict_image(img_path, model):
+def predict_image_and_plot(img_path, model, title=None):
     global reconstructed_img
     patch_size = 256
     img = load_img(img_path)
@@ -72,5 +72,36 @@ def predict_image(img_path, model):
     ax[1].imshow(reconstructed_img.astype(np.uint8), cmap="gray", vmin=0, vmax=255)
     ax[1].set_title("Prediction")
 
+    if title:
+        plt.title(title)
+
     for a in ax:
         a.axis("off")
+
+
+def predict_image(img_path, model):
+    global reconstructed_img
+    patch_size = 256
+    img = load_img(img_path)
+
+    original_size = img.size
+
+    img = ImageOps.expand(img, (0, 0, patch_size - img.size[0] % patch_size, patch_size - img.size[1] % patch_size),
+                          fill="white")
+
+    img = img_to_array(img)
+
+    patches = split_image(img, patch_size)
+
+    X = make_X(patches)
+
+    pred_patches = model.predict(X)
+
+    reconstructed_img = reconstruct_image(pred_patches, img.shape)
+    # Rescale it to 0-255
+    reconstructed_img = (reconstructed_img - np.min(reconstructed_img)) / (
+            np.max(reconstructed_img) - np.min(reconstructed_img)) * 255
+
+    reconstructed_img = reconstructed_img[:original_size[1], :original_size[0]]
+
+    return reconstructed_img

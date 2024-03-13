@@ -22,7 +22,6 @@ from keras.layers import concatenate, add
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
 import os 
-import cv2 
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt 
@@ -31,7 +30,7 @@ from tensorflow.keras.layers import Input, concatenate, Conv2D, MaxPooling2D, Co
 from tensorflow.keras.layers import Activation, add, multiply, Lambda
 from tensorflow.keras.layers import AveragePooling2D, average, UpSampling2D, Dropout
 from tensorflow.keras.optimizers import Adam,SGD,RMSprop
-from keras.initializers import glorot_normal, random_normal, random_uniform
+#from keras.initializers import glorot_normal, random_normal, random_uniform
 from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from keras import backend as K
 from sklearn.metrics import roc_curve, auc, precision_recall_curve 
@@ -40,8 +39,6 @@ from sklearn.model_selection import train_test_split
 
 im_width = 256
 im_height = 256
-path_train ='tianditu/'
-path_test = 'tianditu/test/'
 
 #加载数据
 # Get and resize train images and masks
