@@ -1,0 +1,5 @@
+*.pyc
+Raster-Map-data-and-code/training_dataset/tianditu/generated/
+Raster-Map-data-and-code/training_dataset/tianditu/mix/
+Raster-Map-data-and-code/training_dataset/tianditu/mix_fill/
+.idea/
